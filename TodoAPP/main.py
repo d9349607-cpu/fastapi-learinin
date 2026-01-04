@@ -7,10 +7,13 @@ import models
 from models import Todos
 from database import Base, engine,SessionLocal
 from starlette import status
+from routers import auth
 
 app=FastAPI()
 
 models.Base.metadata.create_all(bind=engine)
+
+app.include_router(auth.router)
 
 class TodoRequest(BaseModel):
     title:str=Field(min_length=3)
@@ -62,4 +65,12 @@ async def update_todo(db:db_dependency,
     todo_model.priority=todo_request.priority
     todo_model.complete=todo_request.complete
     db.add(todo_model)
+    db.commit()
+
+@app.delete('/todos/{todo_id}',status_code=status.HTTP_204_NO_CONTENT)
+async def delete_todo(db:db_dependency,todo_id:int=Path(gt=0)):
+    todo_model=db.query(Todos).filter(Todos.id==todo_id).first()
+    if todo_model is None:
+        raise HTTPException(status_code=404,detail='Todo not found.')
+    db.query(Todos).filter(Todos.id==todo_id).delete()
     db.commit()
