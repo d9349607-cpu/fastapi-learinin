@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
+from models import users
 
 
 
@@ -19,4 +20,14 @@ class CreateUserRequest(BaseModel):
 
 @router.post("/auth")
 async def create_user(create_user_request: CreateUserRequest):
-    return {'user':'authenticated'}
+    create_user_model=users(
+        username=create_user_request.username,
+        email=create_user_request.email,
+        first_name=create_user_request.first_name,
+        last_name=create_user_request.last_name,
+        hashed_password=create_user_request.password,
+        role=create_user_request.role,
+        is_active=True
+    )
+    # Here you would typically add the user to the database
+    return create_user_model
